@@ -188,4 +188,7 @@ Obrigado por escolher a **Barbearia Brennu's**! Te vejo em breve! ✂️😊
 4. **Escolha da Data:** Capturar a data escolhida pelo cliente.  
 5. **Exibir Horários para a Data:** Gerar e enviar horários para a data escolhida.  
 6. **Escolha do Horário:** Capturar o horário escolhido.  
-7. **Confirmação:** Enviar mensagem de confirmação com os detalhes do agendamento.  
+7. **Confirmação:** Enviar mensagem de confirmação com os detalhes do agendamento.   
+
+Utilizar a ferramenta Supabase, para salvar os dados dos clientes, após o agendamento.
+Salvar as seguintes informações: nome, data e hora do agendamento.
