@@ -1,0 +1,191 @@
+Chatbot Brenninho - Barbearia Brennu’s
+
+Descrição Geral Este chatbot foi criado para gerenciar de maneira eficiente e amigável os agendamentos na barbearia Brennu's. Com foco em oferecer uma experiência personalizada e prática, o Brenninho, que é o responsável pela agenda, vai disponibilizar os horários dos barbeiros Breno e Diego, além de confirmar os agendamentos e garantir o cuidado com todas as informações necessárias. o assistente exibe horários disponíveis, fornece todos os detalhes essenciais após a marcação.
+
+Siga o modelo abaixo:
+
+---
+
+### Fluxo de Trabalho no n8n  
+
+#### 1. **Início do Atendimento**  
+- **Nó:** `Telegram` ou `WhatsApp` (dependendo da plataforma que você está usando).  
+- **Ação:** Enviar mensagem inicial.  
+
+**Mensagem:**  
+```
+Olá! Eu sou o Brenninho, assistente da **Barbearia Brennu's**. 😊  
+Para começar, por favor, me informe seu nome:  
+```
+
+---
+
+#### 2. **Capturar o Nome do Cliente**  
+- **Nó:** `Telegram` ou `WhatsApp`.  
+- **Ação:** Aguardar a resposta do cliente.  
+- **Configuração:** Salvar a resposta em uma variável (por exemplo, `nome_cliente`).  
+
+**Como configurar:**  
+1. No nó de captura de mensagem, selecione a opção "Wait for Message".  
+2. Crie uma variável para armazenar o nome do cliente:  
+   ```plaintext
+   {{ $vars.nome_cliente = $input.text }}
+   ```
+
+---
+
+#### 3. **Perguntar o Barbeiro Escolhido**  
+- **Nó:** `Telegram` ou `WhatsApp`.  
+- **Ação:** Enviar mensagem perguntando qual barbeiro o cliente deseja.  
+
+**Mensagem:**  
+```
+Obrigado, {{ $vars.nome_cliente }}! 😄  
+Você prefere ser atendido pelo **Breno** ou pelo **Diego**?  
+Por favor, digite o nome do barbeiro escolhido:  
+```
+
+---
+
+#### 4. **Capturar a Escolha do Barbeiro**  
+- **Nó:** `Telegram` ou `WhatsApp`.  
+- **Ação:** Aguardar a resposta do cliente.  
+- **Configuração:** Salvar a resposta em uma variável (por exemplo, `barbeiro_escolhido`).  
+
+**Como configurar:**  
+1. No nó de captura de mensagem, selecione a opção "Wait for Message".  
+2. Crie uma variável para armazenar a escolha do barbeiro:  
+   ```plaintext
+   {{ $vars.barbeiro_escolhido = $input.text }}
+   ```
+
+---
+
+#### 5. **Exibir Horários Disponíveis**  
+- **Nó:** `Function` ou `Code`.  
+- **Ação:** Gerar os horários disponíveis com base na data atual e no horário de funcionamento.  
+
+**Código no nó `Function`:**  
+```javascript
+// Definir horários disponíveis
+const horariosDisponiveis = [
+  "08:00", "09:00", "10:00", "11:00", "12:00", 
+  "13:00", "14:00", "15:00", "16:00", "17:00", "18:00" "19:00"
+];
+
+// Retornar os horários
+return {
+  horarios: horariosDisponiveis
+};
+```
+
+---
+
+#### 6. **Enviar Horários Disponíveis**  
+- **Nó:** `Telegram` ou `WhatsApp`.  
+- **Ação:** Enviar a lista de horários disponíveis para o cliente.  
+
+**Mensagem:**  
+```
+Beleza, {{ $vars.nome_cliente }}! Vou te mostrar os horários disponíveis para o {{ $vars.barbeiro_escolhido }}.  
+
+📅 **Data Atual:** {{ $now.toFormat('DD/MM/YYYY') }}  
+⏰ **Horários Disponíveis para Hoje:**  
+{{ $nodes["Function"].json.horarios.join("\n- ") }}  
+
+Quer agendar para outro dia? Digite a data no formato **DD/MM**. Exemplo: 05/03. (até 7 dias de antecedência).  
+```
+
+---
+
+#### 7. **Capturar a Data Escolhida**  
+- **Nó:** `Telegram` ou `WhatsApp`.  
+- **Ação:** Aguardar a resposta do cliente.  
+- **Configuração:** Salvar a resposta em uma variável (por exemplo, `data_escolhida`).  
+
+**Como configurar:**  
+1. No nó de captura de mensagem, selecione a opção "Wait for Message".  
+2. Crie uma variável para armazenar a data escolhida:  
+   ```plaintext
+   {{ $vars.data_escolhida = $input.text }}
+   ```
+
+---
+
+#### 8. **Exibir Horários para a Data e dia Escolhido**  
+- **Nó:** `Function` ou `Code`.  
+- **Ação:** Gerar os horários disponíveis para a data e dia escolhido.  
+
+**Código no nó `Function`:**  
+```javascript
+// Definir horários disponíveis
+const horariosDisponiveis = [
+  "08:00", "09:00", "10:00", "11:00", "12:00", 
+  "13:00", "14:00", "15:00", "16:00", "17:00", "18:00" "19:00"
+];
+
+// Retornar os horários
+return {
+  horarios: horariosDisponiveis
+};
+```
+
+---
+
+#### 9. **Enviar Horários para a Data Escolhida**  
+- **Nó:** `Telegram` ou `WhatsApp`.  
+- **Ação:** Enviar a lista de horários disponíveis para a data escolhida.  
+
+**Mensagem:**  
+```
+Você escolheu o dia {{ $vars.data_escolhida }}.  
+Aqui estão os horários disponíveis para o {{ $vars.barbeiro_escolhido }}:  
+{{ $nodes["Function"].json.horarios.join("\n- ") }}  
+
+Por favor, escolha um horário:  
+```
+
+---
+
+#### 10. **Capturar o Horário Escolhido**  
+- **Nó:** `Telegram` ou `WhatsApp`.  
+- **Ação:** Aguardar a resposta do cliente.  
+- **Configuração:** Salvar a resposta em uma variável (por exemplo, `horario_escolhido`).  
+
+**Como configurar:**  
+1. No nó de captura de mensagem, selecione a opção "Wait for Message".  
+2. Crie uma variável para armazenar o horário escolhido:  
+   ```plaintext
+   {{ $vars.horario_escolhido = $input.text }}
+   ```
+
+---
+
+#### 11. **Confirmar Agendamento**  
+- **Nó:** `Telegram` ou `WhatsApp`.  
+- **Ação:** Enviar mensagem de confirmação com os detalhes do agendamento.  
+
+**Mensagem:**  
+```
+✅ Agendamento confirmado, {{ $vars.nome_cliente }}!  
+
+Detalhes do seu agendamento:  
+- *Barbeiro:* {{ $vars.barbeiro_escolhido }}  
+- *Data:* {{ $vars.data_escolhida }}  
+- *Horário:* {{ $vars.horario_escolhido }}  
+- *Endereço:* Rua Prisco Paraíso, 1234 - Coqueiro, Araci - BA, CEP 48760-000  
+
+Obrigado por escolher a **Barbearia Brennu's**! Te vejo em breve! ✂️😊  
+```
+
+---
+
+### Resumo do Fluxo no n8n  
+
+1. **Início:** Enviar mensagem inicial e capturar o nome do cliente.  
+2. **Escolha do Barbeiro:** Perguntar e capturar a escolha do barbeiro.  
+3. **Exibir Horários:** Gerar e enviar horários disponíveis para o dia atual.  
+4. **Escolha da Data e dia:** Capturar a data e o dia escolhida pelo cliente.  
+5. **Exibir Horários para a Data e o dia:** Gerar e enviar horários para a data e dia escolhida.  
+6. **Escolha do Horário:** Capturar o horário escolhido.  
+7. **Confirmação:** Enviar mensagem de confirmação com os detalhes do agendamento.  
