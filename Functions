@@ -1,1 +1,205 @@
+1. Function 1: Consultar Horários Disponíveis para o Barbeiro 
+
+// Recebe os dados do barbeiro e a data escolhida
+const barbeiroEscolhido = $json["barbeiro_escolhido"];  // 'Breno' ou 'Lucas'
+const dataEscolhida = $json["data_escolhida"];
+const horariosFuncionamento = [
+  "08:00", "09:00", "10:00", "11:00", "12:00", 
+  "13:00", "14:00", "15:00", "16:00", "17:00", "18:00"
+];
+
+// Define o calendarId com base no barbeiro
+let calendarId = 'ruancarls1@gmail.com';  // Este é o calendarId padrão, pode ser modificado conforme necessário.
+
+if (barbeiroEscolhido === 'Breno') {
+    calendarId = 'calendarId_Breno';  // Substitua com o calendarId do Breno
+} else if (barbeiroEscolhido === 'Lucas') {
+    calendarId = 'calendarId_Lucas';  // Substitua com o calendarId do Lucas
+}
+
+// Define a data inicial e final para a consulta
+const dataInicial = `${dataEscolhida}T00:00:00`;
+const dataFinal = `${dataEscolhida}T23:59:59`;
+
+// Conecta ao node "Buscar Eventos1"
+const eventSearchResponse = await googleCalendar.getEvents({
+    calendarId: calendarId,
+    timeMin: dataInicial,
+    timeMax: dataFinal,
+    timeZone: 'America/Sao_Paulo'
+});
+
+// Filtra os horários disponíveis
+const horariosDisponiveis = horariosFuncionamento.filter(horario => {
+    const horarioFinal = `${dataEscolhida}T${horario}:00`;
+    return !eventSearchResponse.some(event => {
+        const eventStart = new Date(event.start.dateTime);
+        const eventEnd = new Date(event.end.dateTime);
+        const horarioEscolhido = new Date(horarioFinal);
+        return eventStart.getTime() <= horarioEscolhido.getTime() && eventEnd.getTime() > horarioEscolhido.getTime();
+    });
+});
+
+return {
+    json: {
+        horariosDisponiveis: horariosDisponiveis
+    }
+};
+
+2. Function 2: Verificar Disponibilidade do Horário 
+
+// Recebe os dados do cliente e o horário escolhido
+const barbeiroEscolhido = $json["barbeiro_escolhido"];
+const horarioEscolhido = $json["horario_escolhido"];
+const dataEscolhida = $json["data_escolhida"];
+const horarioFinal = `${dataEscolhida}T${horarioEscolhido}:00`;
+
+// Define o calendarId com base no barbeiro
+let calendarId = 'ruancarls1@gmail.com';  // Este é o calendarId padrão, pode ser modificado conforme necessário.
+
+if (barbeiroEscolhido === 'Breno') {
+    calendarId = 'calendarId_Breno';  // Substitua com o calendarId do Breno
+} else if (barbeiroEscolhido === 'Lucas') {
+    calendarId = 'calendarId_Lucas';  // Substitua com o calendarId do Lucas
+}
+
+// Verifica se o horário está disponível
+const eventSearchResponse = await googleCalendar.getEvents({
+    calendarId: calendarId,
+    timeMin: `${horarioFinal}`,
+    timeMax: `${new Date(new Date(horarioFinal).getTime() + 60 * 60 * 1000).toISOString()}`,
+    timeZone: 'America/Sao_Paulo'
+});
+
+let resposta = '';
+
+if (eventSearchResponse.length > 0) {
+    resposta = `Desculpe, o horário ${horarioEscolhido} está ocupado para o ${barbeiroEscolhido}. Que tal tentarmos outro horário?`;
+} else {
+    resposta = `O horário ${horarioEscolhido} está disponível para o ${barbeiroEscolhido}. Vamos agendar!`;
+}
+
+return {
+    json: {
+        resposta: resposta,
+        horarioFinal: horarioFinal
+    }
+};
+
+Function 3: Agendar o Corte no Google Calendar (com link do evento)
+
+// Recebe os dados do cliente, horário e barbeiro escolhido
+const barbeiroEscolhido = $json["barbeiro_escolhido"];
+const nomeCliente = $json["nome_cliente"];
+const horarioEscolhido = $json["horario_escolhido"];
+const dataEscolhida = $json["data_escolhida"];
+const horarioFinal = `${dataEscolhida}T${horarioEscolhido}:00`;
+
+// Define o calendarId com base no barbeiro
+let calendarId = 'ruancarls1@gmail.com';  // Este é o calendarId padrão, pode ser modificado conforme necessário.
+
+if (barbeiroEscolhido === 'Breno') {
+    calendarId = 'calendarId_Breno';  // Substitua com o calendarId do Breno
+} else if (barbeiroEscolhido === 'Lucas') {
+    calendarId = 'calendarId_Lucas';  // Substitua com o calendarId do Lucas
+}
+
+// Cria o evento no Google Calendar
+const evento = await googleCalendar.createEvent({
+    calendarId: calendarId,
+    start: {
+        dateTime: horarioFinal,
+        timeZone: "America/Sao_Paulo"
+    },
+    end: {
+        dateTime: new Date(new Date(horarioFinal).getTime() + 60 * 60 * 1000).toISOString(),
+        timeZone: "America/Sao_Paulo"
+    },
+    summary: `Agendamento de Corte - ${barbeiroEscolhido}`,
+    description: `Cliente: ${nomeCliente}`,
+    location: "Rua Prisco Paraíso, 1234 - Coqueiro, Araci - BA, CEP 48760-000",
+    attendees: [
+        {
+            email: "cliente@exemplo.com"  // Adicione o e-mail do cliente aqui se necessário
+        }
+    ]
+});
+
+// URL do evento no Google Calendar
+const eventoUrl = evento.htmlLink;  // O Google Calendar fornece o link para o evento com a propriedade `htmlLink`
+
+// Resposta com a confirmação e link do evento
+return {
+    json: {
+        resposta: `✅ Agendamento confirmado, ${nomeCliente}!  
+        - **Barbeiro:** ${barbeiroEscolhido}
+        - **Data:** ${dataEscolhida}
+        - **Horário:** ${horarioEscolhido}
+        - **Local:** Rua Prisco Paraíso, 1234 - Coqueiro, Araci - BA, CEP 48760-000
+        
+        Para mais detalhes, acesse seu [evento no Google Calendar](${eventoUrl}).
+        
+        Te vejo em breve! ✂️😊`
+    }
+};
+
+
+4. Function 4: Excluir um Agendamento (Cancelamento) 
+
+// Recebe o nome do cliente que deseja cancelar o agendamento
+const nomeCliente = $json["nome_cliente"];
+
+// Define o calendarId com base no barbeiro
+let calendarId = 'ruancarls1@gmail.com';  // Este é o calendarId padrão, pode ser modificado conforme necessário.
+
+// Verifica qual barbeiro foi escolhido para buscar os eventos no calendário correto
+const barbeiroEscolhido = $json["barbeiro_escolhido"];
+
+if (barbeiroEscolhido === 'Breno') {
+    calendarId = 'calendarId_Breno';  // Substitua com o calendarId do Breno
+} else if (barbeiroEscolhido === 'Lucas') {
+    calendarId = 'calendarId_Lucas';  // Substitua com o calendarId do Lucas
+}
+
+// Buscar todos os eventos no Google Calendar para o barbeiro escolhido e verificar o nome do cliente
+const eventos = await googleCalendar.getEvents({
+    calendarId: calendarId,
+    timeMin: new Date().toISOString(),  // Buscar a partir da data atual
+    timeMax: new Date(new Date().getTime() + 7 * 24 * 60 * 60 * 1000).toISOString(),  // Até 7 dias à frente
+    timeZone: 'America/Sao_Paulo'
+});
+
+// Buscar o evento do cliente baseado no nome
+let eventoEncontrado = null;
+for (const evento of eventos) {
+    if (evento.summary && evento.summary.includes(nomeCliente)) {
+        eventoEncontrado = evento;
+        break;
+    }
+}
+
+// Se o evento foi encontrado, exclui o evento do Google Calendar
+if (eventoEncontrado) {
+    await googleCalendar.deleteEvent({
+        calendarId: calendarId,
+        eventId: eventoEncontrado.id
+    });
+
+    return {
+        json: {
+            resposta: `✅ Seu agendamento foi cancelado com sucesso, ${nomeCliente}!   
+            Aguardamos você em outra oportunidade. 😉`
+        }
+    };
+} else {
+    // Caso o evento não seja encontrado
+    return {
+        json: {
+            resposta: `Desculpe, ${nomeCliente}, não encontrei um agendamento com esse nome.  
+            Por favor, verifique o nome e tente novamente.`
+        }
+    };
+}
+
+
 
